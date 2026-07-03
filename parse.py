@@ -146,7 +146,10 @@ def _parse_speech(
     speaker_name = (elem.get("speakername") or "").strip()
     speaker_id = (elem.get("speakerid") or "").strip()
 
-    if not speaker_name or not speaker_id:
+    # A speech needs at minimum a speaker name to be meaningful.
+    # speaker_id may be missing in newer files (2024+) — the enrich step
+    # will mark these as "Unknown" party, which is correct.
+    if not speaker_name:
         return None
 
     # Extract all text from child <p> elements, preserving nested tag content
