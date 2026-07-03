@@ -15,7 +15,8 @@ Each yearly CSV (`Hansard_2010.csv`, `Hansard_2011.csv`, etc.) contains:
 | `text` | Full speech block / utterance |
 | `date` | Date of the debate (YYYY-MM-DD) |
 | `discussion_title` | Topic or debate title |
-| `chamber` | Commons, Lords, or Westminster Hall |
+| `chamber` | Constitutional body: "Commons" or "Lords" |
+| `venue` | Physical sitting: "Main Chamber", "Westminster Hall", or "Lords Chamber" |
 
 ## Data Source
 

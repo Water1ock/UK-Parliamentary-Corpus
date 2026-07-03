@@ -3,7 +3,7 @@ Export enriched speech blocks to yearly CSV files.
 
 Output files are named Hansard_YYYY.csv containing all debate speeches
 from that calendar year with columns:
-  speaker_name, speaker_party, text, date, discussion_title, chamber
+  speaker_name, speaker_party, text, date, discussion_title, chamber, venue
 """
 
 import csv
@@ -23,6 +23,7 @@ CSV_HEADERS = [
     "date",
     "discussion_title",
     "chamber",
+    "venue",
 ]
 
 
@@ -94,6 +95,7 @@ def _write_csv(filepath: str, speeches: List[SpeechBlock]) -> None:
                 "date": speech.date,
                 "discussion_title": speech.discussion_title,
                 "chamber": speech.chamber,
+                "venue": speech.venue,
             })
 
     logger.debug(f"Wrote {len(speeches):,} rows to {os.path.basename(filepath)}")

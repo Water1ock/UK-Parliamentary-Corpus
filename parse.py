@@ -28,16 +28,19 @@ class SpeechBlock:
     date: str = ""
     discussion_title: str = ""
     chamber: str = ""
+    venue: str = ""
     colnum: str = ""
     time: str = ""
     url: str = ""
 
 
-# Map directory names to human-readable chamber labels
+# Map directory names to (chamber, venue) tuples.
+# Chamber = constitutional body (Commons/Lords).
+# Venue = physical sitting location (Main Chamber, Westminster Hall, Lords Chamber).
 CHAMBER_MAP = {
-    "debates": "Commons",
-    "lordspages": "Lords",
-    "westminhall": "Westminster Hall",
+    "debates": ("Commons", "Main Chamber"),
+    "lordspages": ("Lords", "Lords Chamber"),
+    "westminhall": ("Commons", "Westminster Hall"),
 }
 
 
@@ -53,7 +56,7 @@ def parse_files(data_dir: str) -> List[SpeechBlock]:
     """
     speeches: List[SpeechBlock] = []
 
-    for chamber_dir_name, chamber_label in CHAMBER_MAP.items():
+    for chamber_dir_name, (chamber_label, venue_label) in CHAMBER_MAP.items():
         chamber_path = os.path.join(data_dir, chamber_dir_name)
         if not os.path.isdir(chamber_path):
             logger.debug(f"Chamber directory not found: {chamber_path}")
@@ -62,12 +65,12 @@ def parse_files(data_dir: str) -> List[SpeechBlock]:
         xml_files = sorted(
             f for f in os.listdir(chamber_path) if f.endswith(".xml")
         )
-        logger.info(f"Found {len(xml_files)} XML files in {chamber_label}")
+        logger.info(f"Found {len(xml_files)} XML files in {chamber_label} ({venue_label})")
 
         for filename in tqdm(xml_files, desc=f"Parsing {chamber_label}", unit="file"):
             filepath = os.path.join(chamber_path, filename)
             try:
-                file_speeches = _parse_file(filepath, chamber_label)
+                file_speeches = _parse_file(filepath, chamber_label, venue_label)
                 speeches.extend(file_speeches)
             except Exception as e:
                 logger.error(f"Error parsing {filename}: {e}")
@@ -76,7 +79,7 @@ def parse_files(data_dir: str) -> List[SpeechBlock]:
     return speeches
 
 
-def _parse_file(filepath: str, chamber: str) -> List[SpeechBlock]:
+def _parse_file(filepath: str, chamber: str, venue: str) -> List[SpeechBlock]:
     """Parse a single XML debate file.
 
     Tracks <major-heading> and <minor-heading> elements to build the
@@ -115,7 +118,7 @@ def _parse_file(filepath: str, chamber: str) -> List[SpeechBlock]:
             current_minor = _get_text_content(elem).strip()
         elif tag == "speech":
             speech = _parse_speech(
-                elem, date_str, chamber, current_major, current_minor
+                elem, date_str, chamber, venue, current_major, current_minor
             )
             if speech:
                 speeches.append(speech)
@@ -128,6 +131,7 @@ def _parse_speech(
     elem,
     date_str: str,
     chamber: str,
+    venue: str,
     major_title: str,
     minor_title: str,
 ) -> Optional[SpeechBlock]:
@@ -174,6 +178,7 @@ def _parse_speech(
         date=date_str,
         discussion_title=discussion_title,
         chamber=chamber,
+        venue=venue,
         colnum=elem.get("colnum", ""),
         time=elem.get("time", ""),
         url=elem.get("url", ""),
