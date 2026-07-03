@@ -122,8 +122,8 @@ def main():
         if speeches is None:
             speeches = _load_interim(args.output_dir)
 
-        member_lookup = load_member_data(args.members_file)
-        speeches = enrich_speeches(speeches, member_lookup)
+        member_lookup, name_lookup = load_member_data(args.members_file)
+        speeches = enrich_speeches(speeches, member_lookup, name_lookup)
 
         # Save enriched interim
         enriched_path = os.path.join(args.output_dir, "speeches_enriched.json")
