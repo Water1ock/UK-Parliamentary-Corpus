@@ -2,7 +2,8 @@
 Download UK parliamentary debate XML files from TheyWorkForYou.
 
 Downloads files over HTTP from data.theyworkforyou.com for specified years
-and chambers. Tries the authoritative 'b' variant first, falling back to 'a'.
+and chambers. Scans variants from 'f' down to 'a' (newest first) since recent
+years can split debates across multiple variants (a through f).
 Uses concurrent downloads for speed.
 """
 
@@ -32,6 +33,14 @@ CHAMBER_DIR_MAP = {
     "lords": "lordspages",
     "westminster": "westminhall",
 }
+
+# Debate files can have multiple variants (a, b, c, d, e, f).
+# Recent years (2023+) split debates across many files due to redirect chains.
+# We try the latest variant first (most complete) and fall back to earlier ones.
+# Order: f -> e -> d -> c -> b -> a
+# NOTE: If future years introduce variants 'g', 'h', etc., extend this list.
+#       The pipeline silently skips dates where no variant exists.
+VARIANT_ORDER = ["f", "e", "d", "c", "b", "a"]
 
 
 def download_files(
@@ -101,25 +110,28 @@ def download_files(
 
 
 def _download_one(task: tuple) -> tuple:
-    """Download a single file. Returns (filepath | None, was_skipped: bool)."""
+    """Download a single file. Returns (filepath | None, was_skipped: bool).
+
+    Tries variants in reverse order (f, e, d, c, b, a) since the latest
+    variant is the most complete. For older data only a/b exist, so
+    earlier variants will 404 quickly.
+    """
     chamber, date_str, chamber_dir = task
 
     url_template = CHAMBER_URLS[chamber]
 
-    # Try the authoritative 'b' variant first, then 'a'
-    for variant in ("b", "a"):
+    # Check if any variant already exists on disk
+    for variant in VARIANT_ORDER:
+        url = url_template.format(date=date_str).replace("a.xml", f"{variant}.xml")
+        filepath = os.path.join(chamber_dir, os.path.basename(url))
+        if os.path.exists(filepath):
+            return (filepath, True)
+
+    # No cached variant found — download the newest available
+    for variant in VARIANT_ORDER:
         url = url_template.format(date=date_str).replace("a.xml", f"{variant}.xml")
         filename = os.path.basename(url)
         filepath = os.path.join(chamber_dir, filename)
-
-        # Skip if already downloaded (check both variants)
-        alt_variant = "b" if variant == "a" else "a"
-        alt_filename = filename.replace(f"{variant}.xml", f"{alt_variant}.xml")
-        alt_filepath = os.path.join(chamber_dir, alt_filename)
-        if os.path.exists(filepath):
-            return (filepath, True)
-        if os.path.exists(alt_filepath):
-            return (alt_filepath, True)
 
         try:
             resp = requests.get(url, timeout=30, headers={
