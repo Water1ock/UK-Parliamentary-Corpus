@@ -2,8 +2,8 @@
 Download UK parliamentary debate XML files from TheyWorkForYou.
 
 Downloads files over HTTP from data.theyworkforyou.com for specified years
-and chambers. Scans variants from 'f' down to 'a' (newest first) since recent
-years can split debates across multiple variants (a through f).
+and chambers. Scans variants from 'i' down to 'a' (newest first) since recent
+years split debates across multiple variants (a through f in 2024, c in 2025).
 Uses concurrent downloads for speed.
 """
 
@@ -34,13 +34,12 @@ CHAMBER_DIR_MAP = {
     "westminster": "westminhall",
 }
 
-# Debate files can have multiple variants (a, b, c, d, e, f).
-# Recent years (2023+) split debates across many files due to redirect chains.
+# Debate files can have multiple variants (a through f in 2024, c in 2025).
+# Recent years split debates across many files due to redirect chains.
 # We try the latest variant first (most complete) and fall back to earlier ones.
-# Order: f -> e -> d -> c -> b -> a
-# NOTE: If future years introduce variants 'g', 'h', etc., extend this list.
-#       The pipeline silently skips dates where no variant exists.
-VARIANT_ORDER = ["f", "e", "d", "c", "b", "a"]
+# Order: i -> h -> g -> f -> e -> d -> c -> b -> a
+# Covers up to 2026+ by including i, h, g proactively.
+VARIANT_ORDER = ["i", "h", "g", "f", "e", "d", "c", "b", "a"]
 
 
 def download_files(
@@ -112,9 +111,9 @@ def download_files(
 def _download_one(task: tuple) -> tuple:
     """Download a single file. Returns (filepath | None, was_skipped: bool).
 
-    Tries variants in reverse order (f, e, d, c, b, a) since the latest
+    Tries variants in reverse order (i through a) since the latest
     variant is the most complete. For older data only a/b exist, so
-    earlier variants will 404 quickly.
+    later variants will 404 quickly.
     """
     chamber, date_str, chamber_dir = task
 
