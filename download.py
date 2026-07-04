@@ -201,17 +201,22 @@ def download_standing_files(
         logger.warning("No XML files found in standing/ index")
         return []
 
-    # Step 2: Filter by years if specified
+    # Step 2: Filter by years if specified.
+    # Standing filenames can contain 2+ dates (bill date + sitting date).
+    # The LAST date is the actual sitting date (same logic as parse.py).
+    # Non-standard files use bill-ID naming: standing{BILL_ID}_{NAME}_{session}_{DATE}.xml
     if years:
         year_set = set(years)
         filtered = []
         for filename in xml_files:
-            # Filename format: standingYYYY-MM-DD_...
-            match = re.match(r'standing(\d{4})', filename)
-            if match and int(match.group(1)) in year_set:
-                filtered.append(filename)
-            elif not match:
-                filtered.append(filename)  # Keep if can't parse year
+            # Extract all YYYY-MM-DD dates from filename, use the last one
+            dates = re.findall(r"(\d{4}-\d{2}-\d{2})", filename)
+            if dates:
+                file_year = int(dates[-1][:4])
+                if file_year in year_set:
+                    filtered.append(filename)
+            else:
+                filtered.append(filename)  # Keep if can't parse any date
         logger.info(
             f"Filtered to {len(filtered):,} files for years {years}"
         )
