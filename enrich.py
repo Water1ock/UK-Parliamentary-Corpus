@@ -9,7 +9,10 @@ to the 'id' field of membership objects in people.json.
 
 import json
 import logging
+import re
+import unicodedata
 from collections import defaultdict
+from functools import lru_cache
 from typing import Dict, List, Optional
 
 from parse import SpeechBlock
@@ -149,15 +152,28 @@ def load_member_data(members_path: str) -> tuple:
         if pid:
             pid_to_memberships[pid].append(_make_membership_record(m))
 
-    # Build name -> memberships
+    # Build name -> memberships (normalized keys for fuzzy matching)
     name_lookup: Dict[str, List[dict]] = defaultdict(list)
     for pid, names in pid_to_names.items():
         if pid not in pid_to_memberships:
             continue
         records = pid_to_memberships[pid]
         for name in names:
-            for r in records:
-                name_lookup[name].append(r)
+            norm_key = _normalize_name(name)
+            if norm_key:
+                for r in records:
+                    name_lookup[norm_key].append(r)
+
+    # Deduplicate records per key (multiple alt names may normalize to same key)
+    for key in name_lookup:
+        seen = set()
+        unique = []
+        for r in name_lookup[key]:
+            dedup_key = (r["name"], r["party"], r.get("start_date", ""))
+            if dedup_key not in seen:
+                seen.add(dedup_key)
+                unique.append(r)
+        name_lookup[key] = unique
 
     unique_names = len(name_lookup)
     logger.info(
@@ -196,9 +212,9 @@ def enrich_speeches(
     for speech in speeches:
         memberships = member_lookup.get(speech.speaker_id)
 
-        # Fall back to name lookup if speaker_id is empty/missing
-        if not memberships and name_lookup and not speech.speaker_id:
-            memberships = name_lookup.get(speech.speaker_name)
+        # Fall back to name lookup if ID-based lookup fails
+        if not memberships and name_lookup:
+            memberships = name_lookup.get(_normalize_name(speech.speaker_name))
             if memberships:
                 name_matched += 1
 
@@ -239,6 +255,33 @@ def enrich_speeches(
         )
 
     return enriched
+
+
+@lru_cache(maxsize=8192)
+def _normalize_name(name: str) -> str:
+    """Normalize a speaker name for fuzzy matching.
+
+    Handles the mismatches between Hansard XML speaker names and Popolo
+    people.json names:
+      - Strips honorifics (Dr, Sir, Dame, Mr, Mrs, Ms)
+      - Removes " of " for peers/bishops (Earl of X -> Earl X)
+      - Normalizes accents (Siân -> Sian, Zöe -> Zoe)
+      - Lowercases and strips extra whitespace/punctuation
+    """
+    if not name:
+        return ""
+    # Remove accents
+    name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    # Lowercase
+    name = name.lower()
+    # Strip common honorific prefixes
+    name = re.sub(r"^(dr|sir|dame|mr|mrs|ms|professor|prof)\s+", "", name)
+    # Remove " of " linking words (Earl of Courtown -> Earl Courtown)
+    name = re.sub(r"\s+of\s+", " ", name)
+    # Remove punctuation and collapse whitespace
+    name = re.sub(r"[^\w\s]", "", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    return name
 
 
 def _find_membership_for_date(

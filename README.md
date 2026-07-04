@@ -72,7 +72,7 @@ The pipeline runs in four sequential steps:
 |---|---|---|
 | **download** | `download.py` | Fetches XML debate files via HTTP. Tries the authoritative 'b' variant first, falling back to 'a'. Uses concurrent downloads. |
 | **parse** | `parse.py` | Parses XML into structured `SpeechBlock` objects. Tracks `major-heading`/`minor-heading` for topic context. Handles ISO-8859-1 encoding and DTD entities. |
-| **enrich** | `enrich.py` | Cross-references `speakerid` with `people.json` memberships to add party affiliation. |
+| **enrich** | `enrich.py` | Cross-references `speakerid` with `people.json` memberships to add party affiliation. Falls back to name-based matching (with honorific/accent normalization) when speaker IDs are missing. |
 | **export** | `export.py` | Groups speeches by year and exports `Hansard_YYYY.csv` files with full CSV quoting. |
 
 Saves interim JSON after parse and enrich steps for restartability.
@@ -103,12 +103,30 @@ UK-Parliamentary-Corpus/
 
 ## Coverage
 
-- **Commons debates**: 2001–present (~200 sitting days/year)
-- **Lords debates**: 1999–present
-- **Westminster Hall debates**: 1999–present
+**1,561,674 speeches** across 16 years (2010–2025), spanning three chambers:
 
-The data spans the Blair, Brown, Cameron, May, Johnson, Truss, Sunak, and Starmer
+| Chamber | Venue | Speeches |
+|---|---|---|
+| Commons | Main Chamber | 989,278 |
+| Commons | Westminster Hall | 167,138 |
+| Lords | Lords Chamber | 405,258 |
+| **Total** | | **1,561,674** |
+
+**Party coverage**: 98.6% (1,540,252 named parties, 21,422 Unknown).
+
+The data spans the Cameron, May, Johnson, Truss, Sunak, and Starmer
 governments, making it suitable for longitudinal political discourse analysis.
+
+### Known Limitations
+
+- **~10,800 Unknowns are real people** (Earls, Bishops, some MPs) whose records
+  are missing from `people.json`. The ParlParse member data does not include
+  memberships for hereditary peers, bishops, and archbishops.
+- **Speaker IDs missing from 2025+ XML**. All 2025 speeches lack `speakerid`
+  attributes, relying entirely on name-based party matching.
+- **Stephen Barclay** (934/1,194 speeches Unknown) — has a valid `speaker_id`
+  but only one of his many person records maps to a membership in `people.json`.
+- Standing Committee debates (`standing/`) are not included (only 2001–2002 data).
 
 ## License & Attribution
 
