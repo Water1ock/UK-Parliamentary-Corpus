@@ -126,9 +126,9 @@ analysis.
   attributes, relying entirely on name-based party matching.
 - **Stephen Barclay** (934/1,194 speeches Unknown) — has a valid `speaker_id`
   but only one of his many person records maps to a membership in `people.json`.
-- **Westminster Hall gaps (2002–2004, 2008–2009)**. Westminster Hall data is
-  only available for 2000–2001 and 2005–2007 in the pre-2010 era, resulting in
-  lower speech counts for those years.
+- **Westminster Hall gaps (2002–2004)**. Westminster Hall data is genuinely
+  absent for 2002–2004 (all probed dates return 404). 2008–2009 has spottier
+  coverage (some dates available, some not), resulting in lower speech counts.
 - **Public Bill Committee (standing) debates** are not included. The `standing/` directory
   on TheyWorkForYou contains ~4,600 XML files spanning 2001–2026, but the
   pipeline does not yet download or parse them (different URL naming convention).
