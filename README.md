@@ -6,7 +6,7 @@ from Hansard records.
 
 ## Output
 
-Each yearly CSV (`Hansard_2010.csv`, `Hansard_2011.csv`, etc.) contains:
+Each yearly CSV (`Hansard_2001.csv`, `Hansard_2002.csv`, … `Hansard_2025.csv`) contains:
 
 | Column | Description |
 |---|---|
@@ -53,7 +53,7 @@ curl -L -o members/people.json \
 
 ```bash
 # Full pipeline: download, parse, enrich, export
-python pipeline.py --years 2010-2020 --chambers all --steps all \
+python pipeline.py --years 2001-2025 --chambers all --steps all \
     --members-file ./members/people.json
 
 # Download only
@@ -70,7 +70,7 @@ The pipeline runs in four sequential steps:
 
 | Step | Script | Description |
 |---|---|---|
-| **download** | `download.py` | Fetches XML debate files via HTTP. Tries the authoritative 'b' variant first, falling back to 'a'. Uses concurrent downloads. |
+| **download** | `download.py` | Fetches XML debate files via HTTP. Scans variants from `i` down to `a` (handling multi-variant debate files in recent years). Uses concurrent downloads. |
 | **parse** | `parse.py` | Parses XML into structured `SpeechBlock` objects. Tracks `major-heading`/`minor-heading` for topic context. Handles ISO-8859-1 encoding and DTD entities. |
 | **enrich** | `enrich.py` | Cross-references `speakerid` with `people.json` memberships to add party affiliation. Falls back to name-based matching (with honorific/accent normalization) when speaker IDs are missing. |
 | **export** | `export.py` | Groups speeches by year and exports `Hansard_YYYY.csv` files with full CSV quoting. |
@@ -96,26 +96,26 @@ UK-Parliamentary-Corpus/
 │   ├── lordspages/      # Lords debates
 │   └── westminhall/     # Westminster Hall debates
 └── output/              # Generated CSVs (gitignored)
-    ├── Hansard_2010.csv
-    ├── Hansard_2011.csv
+    ├── Hansard_2001.csv
+    ├── Hansard_2002.csv
     └── ...
 ```
 
 ## Coverage
 
-**1,561,674 speeches** across 16 years (2010–2025), spanning three chambers:
+**2,139,598 speeches** across 25 years (2001–2025), spanning three chambers:
 
 | Chamber | Venue | Speeches |
 |---|---|---|
-| Commons | Main Chamber | 989,278 |
-| Commons | Westminster Hall | 167,138 |
-| Lords | Lords Chamber | 405,258 |
-| **Total** | | **1,561,674** |
+| Commons | Main Chamber | ~1,489,000 |
+| Commons | Westminster Hall | ~200,000 |
+| Lords | Lords Chamber | ~450,000 |
+| **Total** | | **2,139,598** |
 
-**Party coverage**: 98.6% (1,540,252 named parties, 21,422 Unknown).
-
-The data spans the Cameron, May, Johnson, Truss, Sunak, and Starmer
-governments, making it suitable for longitudinal political discourse analysis.
+**Party coverage**: 98.8% (2,114,089 named parties, 25,509 Unknown).
+The data spans the Blair, Brown, Cameron, May, Johnson, Truss, Sunak, and
+Starmer governments, making it suitable for longitudinal political discourse
+analysis.
 
 ### Known Limitations
 
@@ -126,6 +126,9 @@ governments, making it suitable for longitudinal political discourse analysis.
   attributes, relying entirely on name-based party matching.
 - **Stephen Barclay** (934/1,194 speeches Unknown) — has a valid `speaker_id`
   but only one of his many person records maps to a membership in `people.json`.
+- **Westminster Hall gaps (2002–2004, 2008–2009)**. Westminster Hall data is
+  only available for 2000–2001 and 2005–2007 in the pre-2010 era, resulting in
+  lower speech counts for those years.
 - Standing Committee debates (`standing/`) are not included (only 2001–2002 data).
 
 ## License & Attribution
