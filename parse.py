@@ -125,6 +125,20 @@ def _parse_file(filepath: str, chamber: str, venue: str) -> List[SpeechBlock]:
                 speeches.append(speech)
         # Ignore gidredirect, oral-q, and other non-speech elements
 
+    # Enrich discussion titles with bill name for standing committee files.
+    # Non-standard/hybrid filenames (standing5339_EMPLOYMENT_...) contain
+    # the bill name token, while standard date-based names don't.
+    if venue == "Public Bill Committee":
+        bill_name = _extract_bill_name_from_filename(os.path.basename(filepath))
+        if bill_name:
+            for speech in speeches:
+                if speech.discussion_title:
+                    speech.discussion_title = (
+                        f"{bill_name} — {speech.discussion_title}"
+                    )
+                else:
+                    speech.discussion_title = bill_name
+
     return speeches
 
 
@@ -199,6 +213,39 @@ def _get_text_content(elem) -> str:
     because it recursively concatenates text and tail of all descendants.
     """
     return (etree.tostring(elem, method="text", encoding="unicode") or "")
+
+
+def _extract_bill_name_from_filename(filename: str) -> Optional[str]:
+    """Extract a human-readable bill name from a standing committee filename.
+
+    Non-standard files use bill-ID naming:
+      standing5339_EMPLOYMENT_01-0_2024-11-26a.xml  →  "Employment"
+      standing2016-03-15_POLICINGANDCRIME_01-0_2016-03-15a.xml  →  "Policingandcrime"
+
+    Standard files use single-letter committee codes (A-Z) and have
+    no extractable bill name:
+      standing2001-01-09_A_01-0_2001-01-09a.xml  →  None
+
+    Returns None if no bill name can be extracted.
+    """
+    name = filename.replace(".xml", "")
+    parts = name.split("_")
+
+    if len(parts) < 2:
+        return None
+
+    identifier = parts[1]
+
+    # Single-letter identifiers are committee codes (A, B, C…), not bill names
+    if len(identifier) == 1 and identifier.isalpha():
+        return None
+
+    # Strip trailing punctuation (e.g. "POLICE," from filename parsing)
+    identifier = identifier.rstrip(",")
+
+    # Format: lowercase then title case for readable display
+    formatted = identifier.lower().title()
+    return formatted if formatted else None
 
 
 def _extract_date_from_filename(filename: str) -> str:
