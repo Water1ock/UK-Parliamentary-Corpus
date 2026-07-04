@@ -129,7 +129,9 @@ analysis.
 - **Westminster Hall gaps (2002–2004, 2008–2009)**. Westminster Hall data is
   only available for 2000–2001 and 2005–2007 in the pre-2010 era, resulting in
   lower speech counts for those years.
-- Standing Committee debates (`standing/`) are not included (only 2001–2002 data).
+- **Public Bill Committee (standing) debates** are not included. The `standing/` directory
+  on TheyWorkForYou contains ~4,600 XML files spanning 2001–2026, but the
+  pipeline does not yet download or parse them (different URL naming convention).
 
 ## License & Attribution
 
