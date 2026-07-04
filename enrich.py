@@ -58,14 +58,26 @@ def _normalize_party(slug: str) -> str:
 
 
 def _build_full_name(name_parts) -> str:
-    """Build a canonical full name from a Popolo name object."""
+    """Build a canonical full name from a Popolo name object.
+
+    For Lords/peers, builds the titled form used in Hansard XML
+    (e.g. "Baroness Smith of Basildon", "Lord True").
+    For MPs, builds "GivenName FamilyName" form.
+    """
     if not isinstance(name_parts, dict):
         return str(name_parts).strip() if name_parts else ""
     given = name_parts.get("given_name", "")
     family = name_parts.get("family_name", "")
     lordname = name_parts.get("lordname", "")
+    honorific = name_parts.get("honorific_prefix", "")
+    lordof = name_parts.get("lordofname", "")
+
     if lordname:
-        return f"{given} {lordname}".strip()
+        # Build peerage name: "Baroness Smith of Basildon" or "Lord True"
+        base = f"{honorific} {lordname}".strip()
+        if lordof:
+            base = f"{base} of {lordof}"
+        return base
     return f"{given} {family}".strip()
 
 
