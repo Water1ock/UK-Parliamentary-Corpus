@@ -132,9 +132,18 @@ analysis.
   absent for 2002–2004 (all probed dates return 404). 2008–2009 has spottier
   coverage (some dates available, some not), resulting in lower speech counts.
 - **Public Bill Committee data ends at 2016**. The `standing/` directory on
-  TheyWorkForYou contains ~2,900 files from 2001–2016. After 2016, no new
-  standing committee XML files were uploaded. This is a server-side gap in
+  TheyWorkForYou contains ~2,900 files spanning 2001–2016. After March 2016,
+  no new standing committee XML files were uploaded to the server. Commons
+  Public Bill Committee debates from 2017 onwards (e.g. Employment Rights
+  Bill 2024–25 committee stage, 26 Nov 2024 – 11 Mar 2025) are absent from
+  TheyWorkForYou entirely. Lords committee stages from the same period are
+  captured normally in the `lordspages/` feed. This is a server-side gap in
   the TheyWorkForYou archive, not a pipeline limitation.
+- **Employment Rights Bill 2024–25 (bill 3737)**: The corpus contains all Commons
+  chamber stages (1st/2nd/3rd readings, report stage) and all Lords stages
+  (1st/2nd/committee/report/3rd readings, consideration of amendments), but
+  the Commons Public Bill Committee stage (26 Nov 2024 – 11 Mar 2025) is
+  missing due to the post-2016 standing gap described above.
 
 ## License & Attribution
 
