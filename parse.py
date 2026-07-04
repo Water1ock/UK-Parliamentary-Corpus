@@ -41,6 +41,7 @@ CHAMBER_MAP = {
     "debates": ("Commons", "Main Chamber"),
     "lordspages": ("Lords", "Lords Chamber"),
     "westminhall": ("Commons", "Westminster Hall"),
+    "standing": ("Commons", "Public Bill Committee"),
 }
 
 
@@ -202,9 +203,15 @@ def _get_text_content(elem) -> str:
 
 def _extract_date_from_filename(filename: str) -> str:
     """Extract YYYY-MM-DD from filenames like 'debates2010-05-25a.xml'
-    or 'daylord1999-11-17a.xml'."""
-    match = re.search(r"(\d{4}-\d{2}-\d{2})", filename)
-    if match:
-        return match.group(1)
+    or 'daylord1999-11-17a.xml'.
+
+    Uses the LAST date match in the filename. This is important for standing
+    committee files (e.g. standing2001-01-09_A_05-0_2001-01-16a.xml) which
+    contain two dates: the bill reference date and the actual sitting date.
+    For single-date filenames (all other chambers), the first and last match
+    are the same."""
+    matches = re.findall(r"(\d{4}-\d{2}-\d{2})", filename)
+    if matches:
+        return matches[-1]
     logger.warning(f"Could not extract date from filename: {filename}")
     return ""

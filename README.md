@@ -16,7 +16,7 @@ Each yearly CSV (`Hansard_2001.csv`, `Hansard_2002.csv`, … `Hansard_2025.csv`)
 | `date` | Date of the debate (YYYY-MM-DD) |
 | `discussion_title` | Topic or debate title |
 | `chamber` | Constitutional body: "Commons" or "Lords" |
-| `venue` | Physical sitting: "Main Chamber", "Westminster Hall", or "Lords Chamber" |
+| `venue` | Physical sitting: "Main Chamber", "Westminster Hall", "Lords Chamber", or "Public Bill Committee" |
 
 ## Data Source
 
@@ -94,7 +94,8 @@ UK-Parliamentary-Corpus/
 ├── data/                # Downloaded XML files (gitignored)
 │   ├── debates/         # Commons debates
 │   ├── lordspages/      # Lords debates
-│   └── westminhall/     # Westminster Hall debates
+│   ├── westminhall/     # Westminster Hall debates
+│   └── standing/        # Public Bill Committee debates
 └── output/              # Generated CSVs (gitignored)
     ├── Hansard_2001.csv
     ├── Hansard_2002.csv
@@ -103,16 +104,17 @@ UK-Parliamentary-Corpus/
 
 ## Coverage
 
-**2,139,598 speeches** across 25 years (2001–2025), spanning three chambers:
+**2,412,820 speeches** across 25 years (2001–2025), spanning four venues:
 
 | Chamber | Venue | Speeches |
 |---|---|---|
-| Commons | Main Chamber | ~1,489,000 |
-| Commons | Westminster Hall | ~200,000 |
-| Lords | Lords Chamber | ~450,000 |
-| **Total** | | **2,139,598** |
+| Commons | Main Chamber | ~1,280,000 |
+| Commons | Westminster Hall | ~210,000 |
+| Commons | Public Bill Committee | ~273,000 |
+| Lords | Lords Chamber | ~650,000 |
+| **Total** | | **2,412,820** |
 
-**Party coverage**: 98.8% (2,114,089 named parties, 25,509 Unknown).
+**Party coverage**: 98.9% (2,386,088 named parties, 26,732 Unknown).
 The data spans the Blair, Brown, Cameron, May, Johnson, Truss, Sunak, and
 Starmer governments, making it suitable for longitudinal political discourse
 analysis.
@@ -129,9 +131,10 @@ analysis.
 - **Westminster Hall gaps (2002–2004)**. Westminster Hall data is genuinely
   absent for 2002–2004 (all probed dates return 404). 2008–2009 has spottier
   coverage (some dates available, some not), resulting in lower speech counts.
-- **Public Bill Committee (standing) debates** are not included. The `standing/` directory
-  on TheyWorkForYou contains ~4,600 XML files spanning 2001–2026, but the
-  pipeline does not yet download or parse them (different URL naming convention).
+- **Public Bill Committee data ends at 2016**. The `standing/` directory on
+  TheyWorkForYou contains ~2,900 files from 2001–2016. After 2016, no new
+  standing committee XML files were uploaded. This is a server-side gap in
+  the TheyWorkForYou archive, not a pipeline limitation.
 
 ## License & Attribution
 

@@ -42,7 +42,7 @@ def main():
     logger.info(f"Years: {years}")
 
     if args.chambers == "all":
-        chambers = ["commons", "lords", "westminster"]
+        chambers = ["commons", "lords", "westminster", "standing"]
     else:
         chambers = [c.strip() for c in args.chambers.split(",")]
     logger.info(f"Chambers: {chambers}")
@@ -89,9 +89,14 @@ def main():
         logger.info("=" * 60)
         logger.info("STEP 1/4: Downloading debate XML files")
         logger.info("=" * 60)
-        from download import download_files
+        from download import download_files, download_standing_files
 
-        download_files(years, chambers, args.data_dir, args.max_workers)
+        # Separate standing from other chambers (different download strategy)
+        standard_chambers = [c for c in chambers if c != "standing"]
+        if standard_chambers:
+            download_files(years, standard_chambers, args.data_dir, args.max_workers)
+        if "standing" in chambers:
+            download_standing_files(years, args.data_dir, args.max_workers)
 
     # Step 2: Parse
     if "parse" in steps:
@@ -185,7 +190,7 @@ Examples:
         "--chambers",
         type=str,
         default="all",
-        help='Chambers: "commons,lords,westminster" or "all" (default: all)',
+        help='Chambers: "commons,lords,westminster,standing" or "all" (default: all)',
     )
     parser.add_argument(
         "--data-dir",
